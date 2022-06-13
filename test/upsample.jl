@@ -172,3 +172,20 @@ end
         gradtest(x -> pixel_shuffle(x, r), x)
     end
 end
+
+@testset "Complex-valued upsample" begin
+    for (d, method) in zip([1, 2, 3], [upsample_linear, upsample_bilinear, upsample_trilinear])
+        for (k, interp) in zip((2, tuple([2 for i=1:d]...)), [method, upsample_nearest])
+            x = randn(Complex{Float32}, (4,8,12)[1:d]..., 1, 1)
+            xup = interp(x, k)
+            @test size(xup)[1:d] == (8,16,24)[1:d]
+            @test real(xup) == interp(real(x), k)
+            @test imag(xup) == interp(imag(x), k)
+
+            xup = interp(x; size=(8,24,48)[1:d])
+            @test size(xup)[1:d] == (8,24,48)[1:d]
+            @test real(xup) == interp(real(x), size=(8,24,48)[1:d])
+            @test imag(xup) == interp(imag(x), size=(8,24,48)[1:d])
+        end
+    end
+end
